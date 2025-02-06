@@ -1,0 +1,75 @@
+Global high-resolution simple model-V1.0
+------------------------+------------------------------------------------------
+%%% TIME SET %%%        :
+Forward .OR. Back       : F
+Start time              : 2017 06 10 20 00
+End   time              : 2017 06 03 10 00
+HR Time_step            : 5
+LR Time_step            : 10
+CON Time_step           : 5
+------------------------+------------------------------------------------------
+%%% PATH %%%            :
+HR_ROOT_GEOS_FP         : /data/ese-zhengzy/gc/met_2017/
+LR_ROOT_GEOS_FP         : /data/ese-hejl/gc/GEOS_4x5/GEOS_FP/2017/05/
+OUT_ROOT_PATH           : /data/ese-zhengzy/backward/BCPI/
+HR_EMIS_PATH            : /data/ese-zhengzy/gc/SO2.nc
+LR_EMIS_PATH            : /data/ese-zhengzy/gc/SO2_45.nc
+HR_RESTART_PATH         : /data/ese-zhengzy/restart_SO2.nc
+LR_RESTART_PATH         : /data/ese-hejl/gc/new_forward/model.result.20170401.0000.nc
+------------------------+------------------------------------------------------
+%%% Corrective plan %%% :
+Distribution            : T
+------------------------+------------------------------------------------------
+%%% Check_MASS %%%      :
+HR CHECK_MASS           : T
+LR CHECK_MASS           : T
+HR SAVE_PATH            : /data/ese-zhengzy/hr_mass.txt
+LR SAVE_PATH            : /data/ese-zhengzy/lr_mass.txt
+------------------------+------------------------------------------------------
+%%% TRANSPORT MENU %%%  :
+ => Use Flux Correction?: F
+ => Fill Negative Values: F
+ => IORD, JORD, KORD    : 3  3  7
+------------------------+------------------------------------------------------
+%%% SPECIE MENU %%%     :
+ => SPECIE NUMS         : 37
+Tracer #1               :   1   NO      30.0
+Tracer #2               :   2   O3      48.0
+Tracer #3               :   3   PAN    121.0
+Tracer #4               :   4   CO      28.0
+Tracer #5               :   5   ALK4    12.0
+Tracer #6               :   6   ISOP    12.0
+Tracer #7               :   7   HNO3    63.0
+Tracer #8               :   8   H2O2    34.0
+Tracer #9               :   9   ACET    12.0
+Tracer #10              :  10   MEK     12.0
+Tracer #11              :  11   ALD2    12.0
+Tracer #12              :  12   RCHO    58.0
+Tracer #13              :  13   MVK     70.0
+Tracer #14              :  14   MACR    70.0
+Tracer #15              :  15   PMN    147.0
+Tracer #16              :  16   PPN    135.0
+Tracer #17              :  17   R4N2   119.0
+Tracer #18              :  18   PRPE    12.0
+Tracer #19              :  19   C3H8    12.0
+Tracer #20              :  20   CH2O    30.0
+Tracer #21              :  21   C2H6    12.0
+Tracer #22              :  22   N2O5   105.0
+Tracer #23              :  23   HNO4    79.0
+Tracer #24              :  24   MP      48.0
+Tracer #25              :  25   DMS     62.0
+Tracer #26              :  26   SO2     64.0
+Tracer #27              :  27   SO4     96.0
+Tracer #28              :  28   SO4s    96.0
+Tracer #29              :  29   MSA     96.0
+Tracer #30              :  30   NH3     17.0
+Tracer #31              :  31   NH4     18.0
+Tracer #32              :  32   NIT     62.0
+Tracer #33              :  33   NITs    62.0
+Tracer #34              :  34   NO2     46.0
+Tracer #35              :  35   NO3     62.0
+Tracer #36              :  36   HNO2    47.0
+Tracer #37              :  37   N2O     44.0 
+------------------------+------------------------------------------------------
+END OF FILE             :
+------------------------+------------------------------------------------------

@@ -1,0 +1,54 @@
+MODULE READER_MOD
+  IMPLICIT NONE
+  PUBLIC
+
+  PRIVATE  :: FIRSTCOL
+
+  INTEGER  :: FIRSTCOL=26
+
+  CONTAINS
+
+    FUNCTION READ_ONE_LINE( IU_GHSM, LOCATION ) RESULT( LINE )
+
+      USE ERROR_MOD, ONLY : STOP_ERROR
+
+      INTEGER,          INTENT(IN)           :: IU_GHSM
+      CHARACTER(LEN=*), INTENT(IN)           :: LOCATION
+
+      INTEGER                                :: IOS
+      CHARACTER(LEN=255)                     :: LINE
+
+
+      READ( IU_GHSM, '(a)', IOSTAT=IOS ) LINE
+
+      IF ( IOS > 0 ) CALL STOP_ERROR( TRIM(LOCATION) // '-READ_ONE_LINE' )
+
+    END FUNCTION READ_ONE_LINE
+
+    SUBROUTINE SPLIT_ONE_LINE( IU_GHSM, SUBSTRS, N_SUBSTRS, N_EXP, LOCATION )
+
+      USE CHARPAK_MOD, ONLY: STRSPLIT
+
+      CHARACTER(LEN=255), INTENT(OUT) :: SUBSTRS(10)
+      INTEGER,            INTENT(OUT) :: N_SUBSTRS
+      INTEGER,            INTENT(IN)  :: N_EXP, IU_GHSM
+      CHARACTER(LEN=*),   INTENT(IN)  :: LOCATION
+
+      CHARACTER(LEN=255)              :: LINE
+
+
+      LINE = READ_ONE_LINE( IU_GHSM, TRIM( LOCATION ) // '-SPLIT_ONE_LINE' )
+
+      CALL STRSPLIT( LINE(FIRSTCOL:), ' ', SUBSTRS, N_SUBSTRS )
+      IF ( N_EXP /= N_SUBSTRS ) THEN
+         WRITE( 6, '(a)' ) REPEAT( '=', 79 )
+         WRITE( 6, 100   ) N_EXP, N_SUBSTRS
+         WRITE( 6, '(a)' ) 'STOP in SPLIT_ONE_LINE (input_mod.f)!'
+         WRITE( 6, '(a)' ) REPEAT( '=', 79 )
+         STOP
+ 100     FORMAT( 'Expected ',i2, ' substrs but found ',i3 )
+      ENDIF
+
+      END SUBROUTINE SPLIT_ONE_LINE
+
+END MODULE

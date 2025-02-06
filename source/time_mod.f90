@@ -1,0 +1,349 @@
+MODULE TIME_MOD
+
+  IMPLICIT NONE
+  PUBLIC
+  PRIVATE  :: SPLIT_DOTS
+  PRIVATE  :: MONTH_DAY
+  INTEGER, DIMENSION(9)    :: SPLIT_DOTS = (/ 90, 270, 450, 630, 810, 990,   &
+                                            1170, 1350, 1440 /)
+  INTEGER, DIMENSION(12)   :: MONTH_DAY  = (/ 31, 28, 31, 30, 31, 30,        &
+                                            31, 31, 30, 31, 30, 31 /)
+
+  INTEGER, DIMENSION(24)   :: SPLIT_DOTS_ONE  = (/ 30, 90, 150, 210, 270, 330,    &
+                                                 390, 450, 510, 570, 630, 690,    &
+                                                 750, 810, 870, 930, 990, 1050,   &
+                                                1110, 1170, 1230, 1290, 1350, 1410/)
+
+  TYPE TIME
+
+    INTEGER  :: TIME_STEP
+    INTEGER  :: YEAR
+    INTEGER  :: MONTH
+    INTEGER  :: DAY
+    INTEGER  :: HOUR
+    INTEGER  :: MINUTE
+
+    INTEGER  :: PRE_YEAR
+    INTEGER  :: PRE_MONTH
+    INTEGER  :: PRE_DAY
+
+    INTEGER  :: NEXT_YEAR
+    INTEGER  :: NEXT_MONTH
+    INTEGER  :: NEXT_DAY
+
+    INTEGER(kind=8)  :: MIN_TOTAL
+    INTEGER(kind=8)  :: END_MIN_TOTAL
+
+    INTEGER  :: LEFT_INDEX
+    INTEGER  :: RIGHT_INDEX
+    !INTEGER  :: A3_INDEX
+
+    LOGICAL  :: RUN_FLAG
+    LOGICAL  :: IS_NEW_HOUR
+    LOGICAL  :: IS_NEW_DAY
+    LOGICAL  :: IS_NEW_MONTH
+    LOGICAL  :: IS_NEW_YEAR
+    LOGICAL  :: IS_READ_RIGHT
+    LOGICAL  :: IS_READ_LEFT
+    LOGICAL  :: IS_READ_COULD
+    LOGICAL  :: IS_RENEW_A3
+
+    REAL*8   :: PRE_RATE
+    REAL*8   :: LATER_RATE
+
+  END TYPE TIME
+
+  TYPE(TIME)               :: TIME_OBJ
+
+  CONTAINS
+
+  SUBROUTINE INIT_TIME()
+    USE    CONTROL_VAR_MOD
+
+    TIME_OBJ%YEAR   = y_s
+    TIME_OBJ%MONTH  = m_s
+    TIME_OBJ%DAY    = d_s
+    TIME_OBJ%HOUR   = h_s
+    TIME_OBJ%MINUTE = min_s
+    
+    TIME_OBJ%END_MIN_TOTAL = y_e * 1d8 + m_e * 1d6 +  &
+                             d_e * 1d4 + h_e * 1d2 + min_e
+
+    TIME_OBJ%MIN_TOTAL     = y_s * 1d8 + m_s * 1d6 +  &
+                             d_s * 1d4 + h_s * 1d2 + min_s
+
+    TIME_OBJ%TIME_STEP = HR_STEP
+
+    TIME_OBJ%IS_NEW_YEAR   = .FALSE.
+    TIME_OBJ%IS_NEW_MONTH  = .FALSE.
+    TIME_OBJ%IS_NEW_DAY    = .FALSE.
+    TIME_OBJ%IS_READ_RIGHT = .FALSE.
+    TIME_OBJ%IS_READ_LEFT  = .FALSE.
+    TIME_OBJ%IS_READ_COULD = .FALSE.
+    TIME_OBJ%IS_RENEW_A3    = .FALSE.
+
+    IF ( RUN_DIR ) THEN
+      IF ( h_s * 60 + min_s >= 1350 ) &
+      TIME_OBJ%IS_READ_RIGHT = .TRUE.
+
+      IF ( h_s * 60 + min_s < 90 ) &
+      TIME_OBJ%IS_READ_LEFT = .TRUE.
+
+      IF ( h_s * 60 + min_s < 90 ) &
+      TIME_OBJ%IS_READ_COULD = .TRUE.
+      TIME_OBJ%RUN_FLAG = TIME_OBJ%MIN_TOTAL < TIME_OBJ%END_MIN_TOTAL
+    ELSE
+      IF ( h_s * 60 + min_s < 90 ) &
+      TIME_OBJ%IS_READ_LEFT = .TRUE.
+
+      IF ( h_s * 60 + min_s >= 1350 ) &
+      TIME_OBJ%IS_READ_RIGHT = .TRUE.
+
+      IF ( h_s * 60 + min_s < 90 ) &
+      TIME_OBJ%IS_READ_COULD = .TRUE.
+
+      TIME_OBJ%RUN_FLAG = TIME_OBJ%MIN_TOTAL > TIME_OBJ%END_MIN_TOTAL
+    END IF
+
+    CALL GET_INDEX()
+    CALL GET_RATE()
+    CALL GET_NEXT_DAY()
+    CALL GET_PRE_DAY()
+    
+  END SUBROUTINE
+
+  INTEGER FUNCTION FIND_INDEX_RIGHT(VAL, TABLE)
+    INTEGER,    INTENT(IN)  :: VAL, TABLE(:)
+
+    INTEGER      :: I, LEN_TABLE
+    LEN_TABLE = SIZE(TABLE, 1)
+
+    FIND_INDEX_RIGHT = 0
+ 
+    DO I = 1, LEN_TABLE
+      IF (VAL < TABLE(I)) THEN
+        FIND_INDEX_RIGHT = I
+        EXIT
+      END IF   
+    END DO
+
+    IF (FIND_INDEX_RIGHT == 0) FIND_INDEX_RIGHT = 1
+  END FUNCTION
+
+  INTEGER FUNCTION FIND_INDEX_LEFT(VAL, TABLE)
+    INTEGER,    INTENT(IN)  :: VAL, TABLE(:)
+
+    INTEGER      :: I, LEN_TABLE
+    LEN_TABLE = SIZE(TABLE, 1)
+
+    FIND_INDEX_LEFT = 0
+
+    DO I = 1, LEN_TABLE 
+      IF (VAL >= TABLE(I)) THEN
+        FIND_INDEX_LEFT = I
+        EXIT
+      END IF
+    END DO
+
+    IF (FIND_INDEX_LEFT == 0) FIND_INDEX_LEFT = 8
+  END FUNCTION
+
+  SUBROUTINE RENEW_TIME()
+    USE    CONTROL_VAR_MOD,  ONLY : RUN_DIR
+ 
+    TIME_OBJ%IS_NEW_YEAR   = .FALSE.
+    TIME_OBJ%IS_NEW_MONTH  = .FALSE.
+    TIME_OBJ%IS_NEW_DAY    = .FALSE.
+    TIME_OBJ%IS_READ_RIGHT = .FALSE.
+    TIME_OBJ%IS_READ_LEFT  = .FALSE.
+    TIME_OBJ%IS_READ_COULD = .FALSE.
+    TIME_OBJ%IS_RENEW_A3   = .FALSE.
+
+    TIME_OBJ%MIN_TOTAL     = TIME_OBJ%YEAR * 1d8 + TIME_OBJ%MONTH * 1d6 +  &
+                             TIME_OBJ%DAY * 1d4 + TIME_OBJ%HOUR * 1d2 + TIME_OBJ%MINUTE
+
+    IF ( RUN_DIR ) THEN
+      CALL NEXT_STEP()
+    ELSE
+      CALL BEFORE_STEP()
+    END IF
+
+    CALL GET_INDEX()
+    CALL GET_RATE()
+    CALL GET_NEXT_DAY()
+    CALL GET_PRE_DAY()
+
+  END SUBROUTINE
+
+  SUBROUTINE GET_NEXT_DAY()
+
+    TIME_OBJ%NEXT_YEAR  = TIME_OBJ%YEAR
+    TIME_OBJ%NEXT_MONTH = TIME_OBJ%MONTH
+    TIME_OBJ%NEXT_DAY   = TIME_OBJ%DAY
+    TIME_OBJ%NEXT_DAY   = TIME_OBJ%NEXT_DAY + 1
+
+    IF ( TIME_OBJ%NEXT_DAY > MONTH_DAY(TIME_OBJ%NEXT_MONTH) ) THEN
+      TIME_OBJ%NEXT_MONTH = TIME_OBJ%NEXT_MONTH + 1
+      TIME_OBJ%NEXT_DAY   = 1
+    END IF
+
+    IF ( TIME_OBJ%NEXT_MONTH > 12 ) THEN
+      TIME_OBJ%NEXT_MONTH = 1
+      TIME_OBJ%NEXT_YEAR  = TIME_OBJ%NEXT_YEAR + 1
+    END IF
+
+  END SUBROUTINE
+
+  SUBROUTINE GET_PRE_DAY()
+
+    TIME_OBJ%PRE_YEAR  = TIME_OBJ%YEAR
+    TIME_OBJ%PRE_MONTH = TIME_OBJ%MONTH
+    TIME_OBJ%PRE_DAY   = TIME_OBJ%DAY
+    TIME_OBJ%PRE_DAY   = TIME_OBJ%PRE_DAY - 1
+
+    IF ( TIME_OBJ%PRE_DAY < 1 ) THEN
+      TIME_OBJ%PRE_MONTH = TIME_OBJ%PRE_MONTH - 1
+      IF ( TIME_OBJ%PRE_MONTH < 1 ) THEN
+        TIME_OBJ%PRE_MONTH = 12
+        TIME_OBJ%PRE_YEAR  = TIME_OBJ%PRE_YEAR - 1
+      END IF
+      TIME_OBJ%PRE_DAY   = MONTH_DAY(TIME_OBJ%PRE_MONTH)
+    END IF
+
+  END SUBROUTINE
+
+  SUBROUTINE NEXT_STEP()
+
+    !local var
+    integer         :: today_minute
+
+    TIME_OBJ%MINUTE = TIME_OBJ%MINUTE + TIME_OBJ%TIME_STEP
+    today_minute = TIME_OBJ%HOUR * 60 + TIME_OBJ%MINUTE
+
+    IF ( today_minute >= 1350 .and. today_minute < 1350 + TIME_OBJ%TIME_STEP ) &
+    TIME_OBJ%IS_READ_RIGHT = .TRUE.
+
+    IF ( today_minute >= 90   .and. today_minute < 90   + TIME_OBJ%TIME_STEP ) &
+    TIME_OBJ%IS_READ_COULD = .TRUE.
+
+    TIME_OBJ%RUN_FLAG = TIME_OBJ%MIN_TOTAL < TIME_OBJ%END_MIN_TOTAL
+
+    IF ( TIME_OBJ%MINUTE >= 60 ) THEN
+      TIME_OBJ%MINUTE = TIME_OBJ%MINUTE - 60
+      TIME_OBJ%HOUR   = TIME_OBJ%HOUR + 1
+      IF ( TIME_OBJ%HOUR >= 24 ) THEN
+        TIME_OBJ%HOUR = 0
+        TIME_OBJ%IS_NEW_DAY = .TRUE.
+        TIME_OBJ%DAY = TIME_OBJ%DAY + 1
+        IF ( TIME_OBJ%DAY > MONTH_DAY(TIME_OBJ%MONTH) ) THEN
+          TIME_OBJ%IS_NEW_MONTH = .TRUE.
+          TIME_OBJ%MONTH = TIME_OBJ%MONTH + 1
+          TIME_OBJ%DAY   = 1
+          IF ( TIME_OBJ%MONTH > 12 ) THEN
+            TIME_OBJ%IS_NEW_YEAR = .TRUE.
+            TIME_OBJ%MONTH = 1
+            TIME_OBJ%YEAR  = TIME_OBJ%YEAR + 1
+          END IF
+        END IF
+      END IF
+    END IF
+  END SUBROUTINE
+
+  SUBROUTINE BEFORE_STEP()
+
+    !local var
+    integer         :: today_minute
+
+    TIME_OBJ%MINUTE = TIME_OBJ%MINUTE - TIME_OBJ%TIME_STEP
+    today_minute = TIME_OBJ%HOUR * 60 + TIME_OBJ%MINUTE
+
+    IF ( today_minute < 90 .and. today_minute >= 90 - TIME_OBJ%TIME_STEP ) &
+    TIME_OBJ%IS_READ_LEFT = .TRUE.
+
+    IF ( today_minute < 90 .and. today_minute >= 90 - TIME_OBJ%TIME_STEP ) &
+    TIME_OBJ%IS_READ_COULD = .TRUE.
+
+    IF ( today_minute < SPLIT_DOTS(TIME_OBJ%LEFT_INDEX) .and. today_minute >= SPLIT_DOTS(TIME_OBJ%LEFT_INDEX) - TIME_OBJ%TIME_STEP ) &
+    TIME_OBJ%IS_RENEW_A3 = .TRUE.
+
+    TIME_OBJ%RUN_FLAG = TIME_OBJ%MIN_TOTAL > TIME_OBJ%END_MIN_TOTAL
+
+    IF ( TIME_OBJ%MINUTE < 0 ) THEN
+      TIME_OBJ%MINUTE = TIME_OBJ%MINUTE + 60
+      TIME_OBJ%HOUR   = TIME_OBJ%HOUR - 1
+      IF ( TIME_OBJ%HOUR < 0 ) THEN
+        TIME_OBJ%HOUR = 23
+        TIME_OBJ%IS_NEW_DAY = .TRUE.
+        TIME_OBJ%DAY = TIME_OBJ%DAY - 1
+        IF ( TIME_OBJ%DAY < 0 ) THEN
+          TIME_OBJ%IS_NEW_MONTH = .TRUE.
+          TIME_OBJ%MONTH = TIME_OBJ%MONTH - 1
+          IF ( TIME_OBJ%MONTH < 1 ) THEN
+            TIME_OBJ%IS_NEW_YEAR = .TRUE.
+            TIME_OBJ%MONTH = 12
+            TIME_OBJ%YEAR  = TIME_OBJ%YEAR - 1
+          END IF
+          TIME_OBJ%DAY   = MONTH_DAY( TIME_OBJ%MONTH )
+        END IF
+      END IF
+    END IF
+  END SUBROUTINE
+
+  SUBROUTINE GET_INDEX()
+
+    TIME_OBJ%LEFT_INDEX  = (TIME_OBJ%HOUR * 60 + TIME_OBJ%MINUTE - 90 + 180) / 180
+    TIME_OBJ%RIGHT_INDEX = TIME_OBJ%LEFT_INDEX + 1
+
+    IF ( TIME_OBJ%LEFT_INDEX == 0 )  TIME_OBJ%LEFT_INDEX = 8
+    IF ( TIME_OBJ%RIGHT_INDEX > 8 )  TIME_OBJ%RIGHT_INDEX = 1
+
+  END SUBROUTINE
+
+  SUBROUTINE GET_RATE()
+    
+    TIME_OBJ%PRE_RATE   = DBLE(MOD( TIME_OBJ%HOUR * 60 + TIME_OBJ%MINUTE + 90, 180 )) / 180
+    TIME_OBJ%LATER_RATE = 1 - TIME_OBJ%PRE_RATE
+
+  END SUBROUTINE
+
+  SUBROUTINE OUTPUT_TIME()
+
+    !LOCAL VAR
+    character(len=80)    :: time_info
+
+    WRITE(time_info, "('TIME == ', I4.4, 'y-', I2.2,       &
+            'm-', I2.2, 'd-', I2.2, 'h-', I2.2, 'm  ==')") &
+         TIME_OBJ%YEAR, TIME_OBJ%MONTH, TIME_OBJ%DAY,      &
+         TIME_OBJ%HOUR, TIME_OBJ%MINUTE
+
+    WRITE( 6, '(a)' ) ''
+    WRITE( 6, '(a)' ) time_info
+    WRITE( 6, '(a)' ) ''
+
+  END SUBROUTINE
+
+  SUBROUTINE GET_NEXT_HOUR( YEAR, MONTH, DAY, HOUR )
+
+    INTEGER, INTENT(INOUT)    :: YEAR, MONTH,DAY, HOUR
+
+    HOUR  = TIME_OBJ%HOUR + 1
+    DAY   = TIME_OBJ%DAY
+    MONTH = TIME_OBJ%MONTH
+    YEAR  = TIME_OBJ%YEAR
+
+    IF ( HOUR >= 24 ) THEN
+      HOUR = 1
+      DAY = DAY + 1
+      IF ( DAY > MONTH_DAY(TIME_OBJ%MONTH) ) THEN
+        DAY = 1
+        MONTH = MONTH + 1
+        IF ( MONTH > 12 ) THEN
+          MONTH = 1
+          YEAR = YEAR + 1
+        END IF
+      END IF
+    END IF
+
+  END SUBROUTINE
+END MODULE
+

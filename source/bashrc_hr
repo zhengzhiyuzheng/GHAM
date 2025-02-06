@@ -1,0 +1,13 @@
+## taiyi load module
+module load cmake/3.12.2
+module load intel/2018.4
+module load netcdf-fortran/4.4.4-gcc-4.8.5
+module load mpi/openmpi/3.1.2_gcc
+
+## VAR setting
+export LD_LIBRARY_PATH=/work/ese-hejl/model_z/adjoint_lib/lib:$LD_LIBRARY_PATH
+#export LD_LIBRARY_PATH=/work/ese-zhengzy/model_z/GHSM/XGboost:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/work/ese-zhengzy/model_z/GHSM/libtorch/lib:$LD_LIBRARY_PATH
+#export OMP_STACKSIZE=14M
+export OMP_NUM_THREADS=40
+ulimit -s unlimited

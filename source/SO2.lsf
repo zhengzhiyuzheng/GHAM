@@ -1,0 +1,6 @@
+#BSUB -J BC 
+#BSUB -q ser
+#BSUB -n 20
+#BSUB -R "span[ptile=40]"
+#BSUB -e ./err.log
+./ghsm > ./log/BC.log

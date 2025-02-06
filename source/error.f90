@@ -1,0 +1,24 @@
+MODULE ERROR_MOD
+  IMPLICIT NONE
+  PUBLIC
+
+  CONTAINS
+
+  SUBROUTINE STOP_ERROR( LOCATION )
+
+  CHARACTER(LEN=*),  INTENT(IN)           :: LOCATION
+
+  !LOCAL VAR
+  integer        :: LOC_LEN, SPACE_NUM
+
+  LOC_LEN   = LEN(LOCATION)
+  SPACE_NUM = ( 79 - LOC_LEN ) / 2
+
+  WRITE( 6, '(a)' ) ''
+  WRITE( 6, '(a)' ) REPEAT( '=', 79 )
+  WRITE( 6, '(a)' ) REPEAT( ' ', SPACE_NUM )// LOCATION// REPEAT( ' ', SPACE_NUM )
+  WRITE( 6, '(a)' ) REPEAT( '=', 79 )
+  WRITE( 6, '(a)' ) ''
+  STOP
+  END SUBROUTINE
+END MODULE

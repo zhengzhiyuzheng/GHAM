@@ -1,0 +1,7 @@
+#BSUB -J BC 
+#BSUB -q ser
+#BSUB -n 5
+#BSUB -R "span[ptile=40]"
+#BSUB -e ./err.log
+
+./ghsm_tracer > ./log/tracer.log

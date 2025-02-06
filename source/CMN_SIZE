@@ -1,0 +1,90 @@
+! $Id: CMN_SIZE,v 1.2 2012/03/01 22:00:25 daven Exp $
+      !=======================================================================
+      ! CMN_SIZE: size parameters for GEOS-CHEM arrays (bmy, 3/16/01, 4/3/07)
+      !
+      ! NOTES:
+      ! (1 ) Now set LLTROP = 20 for GEOS-3 (bmy, 4/12/01)
+      ! (2 ) Eliminated obsolete commented-out code (bmy, 4/20/01)
+      ! (3 ) Now set MAXFAM = 12 for more P-L families (bmy, 6/28/01)
+      ! (4 ) Comment out {IJL}GCMPAR -- these are obosolete (bmy, 9/24/01)
+      ! (5 ) Also set LLPAR = 30 for GEOS-3, will regrid online (bmy, 9/24/01)
+      ! (6 ) Removed obsolete code from 9/01 (bmy, 10/23/01)
+      ! (7 ) Removed NAIR, LAIREMS, these are now defined
+      !       in "aircraft_nox_mod.f" (bmy, 2/14/02)
+      ! (8 ) Eliminated commented-out code from 2/14/02.  Also added NAER
+      !       and NRH parameters for aerosols. (rvm, bmy, 2/27/02)
+      ! (9 ) Removed IM, JM, IMX, JMX to avoid namespace pollution.  This
+      !       is needed to get the new TPCORE to work.  Also changed RCS
+      !       ID tag comment character from "C" to "!" to allow freeform
+      !       compilation. (bmy, 6/25/02)
+      ! (10) Removed obsolete code from 6/02 (bmy, 8/26/02)
+      ! (11) Added NUMDEP_SULF in a common block for sulfate dry deposition.
+      !       Also set MAXDEP=31 and NNPAR=31 for coupled fullchem/sulfate
+      !       simulations. (rjp, bdf, bmy, 11/15/02)
+      ! (12) Removed I0, J0; these are now superseded by "grid_mod.f"
+      !       (bmy, 2/11/03)
+      ! (13) Added parameters for GEOS-4 (bmy, 6/18/03)
+      ! (14) Now defines both 55 level and 30 level GEOS-4 grids.  Also
+      !       define LLTROP=19 for GEOS-4 grids.  Also remove obsolete
+      !       GEOS-2 grid declarations. (bmy, 10/31/03)
+      ! (15) LLTROP should be 17 for GEOS-4...based on the ND55 diagnostic
+      !       when computed for 2003 met fields (bmy, 2/18/04)
+      ! (16) Increase NNPAR from 31 to 39 for carbon & dust tracers.  Also
+      !       declare NDSTBIN as # of dust bins. (rvm, tdf, bmy, 4/1/04)
+      ! (17) Increase NNPAR to 41 for seasalt tracers (rjp, bec, bmy, 4/20/04)
+      ! (18) Increase NNPAR to 50 for SOA tracers (rjp, bmy, 7/15/04)
+      ! (19) Now use NESTED_CH and NESTED_NA cpp switches to define
+      !       parameters for 1x1 nested grids.  Also add parameters for
+      !       the 1 x 1.25 global grid. (bmy, 12/1/04)
+      ! (20) Now add parameters for GCAP and GEOS-5 grids.  Remove references
+      !       to obsolete LGEOSCO and FULLCHEM Cpp switches (bmy, 6/24/05)
+      ! (21) Now add I1x1 and J1x1 parameters for data on the 1x1 GEOS
+      !       grid. (bmy, 10/24/05)
+      ! (22) Increase NNPAR to 52 (bmy, 12/6/05)
+      ! (23) Increase NNPAR to 54 (dkh, bmy, 5/22/06)
+      ! (24) Remove support for GEOS-1 and GEOS-STRAT met fields (bmy, 8/4/06)
+      ! (25) Added variable tropopause case (bmy, phs, bdf, 8/21/06)
+      ! (26) Set LLTROP to level of first box entirely above 20km for GEOS-3
+      !      and GEOS-4 (phS, 9/14/06)
+      ! (27) Bug fix: set LLTROP_FIX = LLPAR for GCAP (bmy, 11/29/06)
+      ! (28) Reset vertical coordinates for GEOS-5.  Also renamed GRID30LEV
+      !       to GRIDREDUCED (bmy, 4/3/07)
+      ! (29) New parameters for GEOS-5 nested grid (yxw, dan, bmy, 11/6/08)
+      ! (30) NEMPARA set to 12 to emit O3 and HNO3 (phs, 4/3/08)
+      ! (31) Add tracers to NNPAR = 73. (tmf, 1/7/09)
+      ! (32) NEMPARA set to 21 to emit new tracers for GLYX chemistry
+      !      (tmf, ccc, 3/2/09)
+      ! (33) NEMPARB set to 3 to emit MBO, MONX (tmf, ccc, 3/2/09)
+      !=======================================================================
+
+      ! C Preprocessor #define statements for conditional compilation
+      include "define.h"
+
+      !=================================================================
+      ! DISIZE = size (in degrees) of a longitude grid box
+      ! DJSIZE = size (in degrees) of a latitude  grid box
+      !=================================================================
+
+
+      !-----------------------------------------------------------------
+      ! GEOS-FP Nested NA Grid
+      !-----------------------------------------------------------------
+      INTEGER, PARAMETER :: IGLOB      = 1152
+      INTEGER, PARAMETER :: JGLOB      = 721
+      INTEGER, PARAMETER :: LGLOB      = 72
+      INTEGER, PARAMETER :: SPECIE     = 37
+      INTEGER, PARAMETER :: IIPAR      = IGLOB
+      INTEGER, PARAMETER :: JJPAR      = JGLOB
+      INTEGER, PARAMETER :: LLPAR      = LGLOB     ! Full vertical grid
+      INTEGER, PARAMETER :: LLTROP_FIX = 40        !  -- 72 levels
+      INTEGER, PARAMETER :: LLTROP     = 40
+      INTEGER, PARAMETER :: LLSTRAT    = 59
+      INTEGER, PARAMETER :: LLCHEM     = LLSTRAT
+      INTEGER, PARAMETER :: LLCHEM_FIX = LLSTRAT
+      REAL*8,  PARAMETER :: PTOP       = 0.01d0
+      REAL*8,  PARAMETER :: DISIZE = 0.3125d0
+      REAL*8,  PARAMETER :: DJSIZE = 0.25d0
+      INTEGER, PARAMETER :: IIPAR_L = 1152
+      INTEGER, PARAMETER :: JJPAR_L = 721
+
+      INTEGER, PARAMETER :: NUM_CORE = 5

@@ -1,0 +1,70 @@
+FC = ifort
+OBJ = error.o charpak_mod.o reader.o control_var.o netcdf_io.o grid_mod.o pressure_mod.o \
+      tpcore_fvdas_mod.o convection_mod.o  pbl_mix_mod.o pjc_pfix_mod.o time_mod.o       \
+      machine_learn.o algorithm.o air_state.o forcing_mod.o tracer_mod.o tool_mod.o main_tracer.o
+
+LIBS = -lnetcdff -lXG -L/work/ese-hejl/model_z/adjoint_lib/lib -L/work/ese-zhengzy/model_z/GHSM/XGboost/
+FFLAGS = -fopenmp -cpp -O3 -I/work/ese-hejl/model_z/adjoint_lib/include -I/work/ese-zhengzy/model_z/GHSM/XGboost/
+
+main_tracer : $(OBJ)
+	$(FC) $(FFLAGS) -o ghsm_tracer $(OBJ) $(LIBS) -Wl,--allow-multiple-definition
+
+main_tracer.o  : main_tracer.f90 CMN_SIZE CMN_GCTM define.h
+	$(FC) $(FFLAGS) -c main_tracer.f90 $(LIBS)
+grid_mod.o     : grid_mod.f CMN_SIZE CMN_GCTM define.h
+	$(FC) $(FFLAGS) -c grid_mod.f $(LIBS)
+
+machine_learn.o : machine_learn.f90
+	$(FC) $(FFLAGS) -c ./machine_learn.f90 $(LIBS)
+
+pressure_mod.o : pressure_mod.f CMN_SIZE CMN_GCTM define.h
+	$(FC) $(FFLAGS) -c pressure_mod.f $(LIBS)
+
+pjc_pfix_mod.o : pjc_pfix_mod.f CMN_SIZE CMN_GCTM define.h
+	$(FC) $(FFLAGS) -c pjc_pfix_mod.f $(LIBS)
+
+tpcore_fvdas_mod.o : tpcore_fvdas_mod.f90 CMN_SIZE CMN_GCTM define.h
+	$(FC) $(FFLAGS) -c tpcore_fvdas_mod.f90 $(LIBS)
+
+forcing_mod.o  : forcing_mod.f90 CMN_SIZE CMN_GCTM
+	$(FC) $(FFLAGS) -c forcing_mod.f90 $(LIBS)
+
+error.o        : error.f90
+	$(FC) $(FFLAGS) -c error.f90 $(LIBS)
+
+charpak_mod.o  : charpak_mod.f
+	$(FC) $(FFLAGS) -c charpak_mod.f $(LIBS)
+
+reader.o       : reader.f90
+	$(FC) $(FFLAGS) -c reader.f90 $(LIBS)
+
+control_var.o  : control_var.f90 CMN_SIZE CMN_GCTM
+	$(FC) $(FFLAGS) -c control_var.f90 $(LIBS)
+
+algorithm.o    : algorithm.f90 CMN_SIZE CMN_GCTM
+	$(FC) $(FFLAGS) -c algorithm.f90 $(LIBS)
+
+convection_mod.o : convection_mod.f CMN_SIZE CMN_GCTM define.h
+	$(FC) $(FFLAGS) -c convection_mod.f $(LIBS)
+
+netcdf_io.o    : netcdf_io.f90
+	$(FC) $(FFLAGS) -c netcdf_io.f90 $(LIBS)
+
+pbl_mix_mod.o  : pbl_mix_mod.f CMN_SIZE CMN_GCTM define.h
+	$(FC) $(FFLAGS) -c pbl_mix_mod.f $(LIBS)
+
+air_state.o    : air_state.f90 CMN_SIZE CMN_GCTM
+	$(FC) $(FFLAGS) -c air_state.f90 $(LIBS)
+
+time_mod.o     : time_mod.f90
+	$(FC) $(FFLAGS) -c time_mod.f90 $(LIBS)
+
+tracer_mod.o   : tracer_mod.f90 CMN_SIZE
+	$(FC) $(FFLAGS) -c tracer_mod.f90 $(LIBS)
+
+tool_mod.o     : tool_mod.f90
+	$(FC) $(FFLAGS) -c tool_mod.f90 $(LIBS)
+
+.PHONY : clean
+clean:
+	rm -rf *.o main.exe
